@@ -1,47 +1,73 @@
 import React, { useState, useEffect } from 'react';
 
 function Mycart() {
-  const [carts, setCarts] = useState([]);
+  const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
-    fetch('https://fakestoreapi.com/carts')
-      .then(res => res.json())
-      .then(async json => {
-        const cartsWithImages = await Promise.all(json.map(async cart => {
-          const productsWithImages = await Promise.all(cart.products.map(async product => {
-            const productDetails = await fetch(`https://fakestoreapi.com/products/${product.productId}`);
-            const productData = await productDetails.json();
-            return { ...product, image: productData.image };
-          }));
-          return { ...cart, products: productsWithImages };
-        }));
-        setCarts(cartsWithImages);
-      });
+    const fetchCartItems = () => {
+      try {
+        const storedCartItems = localStorage.getItem('@cartItems');
+        if (storedCartItems) {
+          setCartItems(JSON.parse(storedCartItems));
+        }
+      } catch (error) {
+        console.error('Error retrieving cart items:', error);
+      }
+    };
+
+    fetchCartItems();
   }, []);
 
+  const removeFromCart = (itemId) => {
+    try {
+      const updatedCartItems = cartItems.filter(item => item.id !== itemId);
+      setCartItems(updatedCartItems);
+      localStorage.setItem('@cartItems', JSON.stringify(updatedCartItems));
+    } catch (error) {
+      console.error('Error removing item from cart:', error);
+    }
+  };
+
+  const increaseQuantity = (itemId) => {
+    const updatedCartItems = cartItems.map(item => {
+      if (item.id === itemId) {
+        return { ...item, quantity: item.quantity + 1 };
+      }
+      return item;
+    });
+    setCartItems(updatedCartItems);
+    localStorage.setItem('@cartItems', JSON.stringify(updatedCartItems));
+  };
+
+  const decreaseQuantity = (itemId) => {
+    const updatedCartItems = cartItems.map(item => {
+      if (item.id === itemId && item.quantity > 1) {
+        return { ...item, quantity: item.quantity - 1 };
+      }
+      return item;
+    });
+    setCartItems(updatedCartItems);
+    localStorage.setItem('@cartItems', JSON.stringify(updatedCartItems));
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-semibold text-center mb-4">My Cart</h1>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {carts.map(cart => (
-          <div key={cart.id} className="bg-gray-100 rounded-lg p-4">
-            <h2 className="text-lg font-semibold mb-2">Cart ID: {cart.id}</h2>
-            <p className="mb-2">User ID: {cart.userId}</p>
-            <p className="mb-2">Date: {cart.date}</p>
-            <ul>
-              {cart.products.map(product => (
-                <li key={product.productId} className="flex items-center mb-2">
-                  <img src={product.image} alt={`Product ${product.productId}`} className="w-16 h-16 mr-2" />
-                  <div>
-                    <p className="font-semibold">Product ID: {product.productId}</p>
-                    <p>Quantity: {product.quantity}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+    <div>
+      <h2>My Cart</h2>
+      <ul>
+        {cartItems.map(item => (
+          <li key={item.id}>
+            <img src={item.image} alt={item.title} style={{ width: 50, height: 50 }} />
+            <div>
+              <h3>{item.title}</h3>
+              <p>Price: ${item.price}</p>
+              <p>Quantity: {item.quantity}</p>
+              <button onClick={() => increaseQuantity(item.id)}>+</button>
+              <button onClick={() => decreaseQuantity(item.id)}>-</button>
+            </div>
+            <button onClick={() => removeFromCart(item.id)}>Remove</button>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
