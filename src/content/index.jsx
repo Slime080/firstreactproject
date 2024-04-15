@@ -84,9 +84,9 @@ function Index() {
         </ol>
         <a
           href="#"
-          className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 self-start md:self-center"
-        >
-          Explore
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 self-start md:self-center"
+          >
+          Learn More
         </a>
       </div>
     </div>
